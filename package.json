@@ -1,0 +1,17 @@
+{
+  "name": "stay-timeless",
+  "private": true,
+  "workspaces": [
+    "mobile",
+    "server"
+  ],
+  "scripts": {
+    "mobile": "bun run --cwd mobile start",
+    "server": "bun run --cwd server dev",
+    "dev": "concurrently 'bun run server' 'bun run mobile'"
+  },
+  "devDependencies": {
+    "concurrently": "^9.2.1",
+    "typescript": "^5.3.3"
+  }
+}
