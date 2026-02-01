@@ -1,68 +1,85 @@
 // mobile/App.tsx
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, Button } from 'react-native';
+import { useState, useEffect, useCallback } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { trpc, trpcClient } from './app/utils/trpc';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import GetStartedScreen from './app/screens/GetStartedScreen';
+import HomeScreen from './app/screens/HomeScreen';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useFonts } from 'expo-font';
+import * as SplashScreen from 'expo-splash-screen';
 
 const queryClient = new QueryClient();
 
+const ONBOARDING_KEY = '@has_completed_onboarding';
+
 function MainApp() {
-  const { data, isLoading, refetch } = trpc.hello.useQuery({ name: 'React Native' });
-  const todos = trpc.getTodos.useQuery();
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState(false);
+
+  useEffect(() => {
+    checkOnboardingStatus();
+  }, []);
+
+  const checkOnboardingStatus = async () => {
+    try {
+      const value = await AsyncStorage.getItem(ONBOARDING_KEY);
+      setHasCompletedOnboarding(value === 'true');
+    } catch (error) {
+      console.error('Error checking onboarding status:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const completeOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem(ONBOARDING_KEY, 'true');
+      setHasCompletedOnboarding(true);
+    } catch (error) {
+      console.error('Error saving onboarding status:', error);
+    }
+  };
+
+  if (isLoading) {
+    return null; // Or a splash screen component
+  }
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>tRPC + React Native</Text>
-
-      {isLoading ? (
-        <Text>Loading...</Text>
+    <>
+      {hasCompletedOnboarding ? (
+        <HomeScreen />
       ) : (
-        <Text>{data?.message}</Text>
+        <GetStartedScreen onComplete={completeOnboarding} />
       )}
-
-      <View style={styles.todos}>
-        <Text style={styles.subtitle}>Todos:</Text>
-        {todos.data?.map(todo => (
-          <Text key={todo.id}>• {todo.title}</Text>
-        ))}
-      </View>
-
-      <Button title="Refetch" onPress={() => refetch()} />
       <StatusBar style="auto" />
-    </View>
+    </>
   );
 }
 
 export default function App() {
+  const [fontsLoaded] = useFonts({
+    'Georgia': require('./assets/fonts/Georgia.ttf'),
+  });
+
+  const onLayoutRootView = useCallback(async () => {
+    if (fontsLoaded) {
+      await SplashScreen.hideAsync();
+    }
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) {
+    return null;
+  }
   return (
-    <trpc.Provider client={trpcClient} queryClient={queryClient}>
-      <QueryClientProvider client={queryClient}>
-        <MainApp />
-      </QueryClientProvider>
-    </trpc.Provider>
+
+    <SafeAreaProvider onLayout={onLayoutRootView}>
+      <trpc.Provider client={trpcClient} queryClient={queryClient}>
+        <QueryClientProvider client={queryClient}>
+          <MainApp />
+        </QueryClientProvider>
+      </trpc.Provider>
+    </SafeAreaProvider>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    marginBottom: 20,
-  },
-  subtitle: {
-    fontSize: 18,
-    fontWeight: '600',
-    marginTop: 20,
-    marginBottom: 10,
-  },
-  todos: {
-    marginTop: 20,
-  },
-});
