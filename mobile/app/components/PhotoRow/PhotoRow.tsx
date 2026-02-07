@@ -1,3 +1,4 @@
+// mobile/app/components/PhotoRow/PhotoRow
 import { StyleSheet, View } from 'react-native';
 import { Photo } from '../../hooks/usePhotoStorage';
 import { OnePhotoLayout } from './OnePhotoLayout';
@@ -10,7 +11,8 @@ interface PhotoRowProps {
   photos: Photo[];
   variant?: PhotoRowVariant;
   height?: number;
-  onPhotoPress: (photo: Photo) => void;
+  onPhotoPress?: (photo: Photo) => void;
+  onDelete?: (photo: Photo) => void;
 }
 
 const DEFAULT_HEIGHT = 260;
@@ -22,7 +24,7 @@ export function PhotoRow({
   photos,
   variant,
   height = DEFAULT_HEIGHT,
-  onPhotoPress
+  onDelete,
 }: PhotoRowProps) {
   if (photos.length === 0) {
     return null;
@@ -34,7 +36,7 @@ export function PhotoRow({
         <OnePhotoLayout
           photo={photos[0]}
           height={height}
-          onPhotoPress={onPhotoPress}
+          onDelete={onDelete}
         />
       </View>
     );
@@ -52,7 +54,7 @@ export function PhotoRow({
           photos={photos as [Photo, Photo]}
           height={height}
           variant={twoPhotoVariant}
-          onPhotoPress={onPhotoPress}
+          onDelete={onDelete}
         />
       </View>
     );
@@ -71,7 +73,7 @@ export function PhotoRow({
           photos={photos.slice(0, 3) as [Photo, Photo, Photo]}
           height={height}
           variant={threePhotoVariant}
-          onPhotoPress={onPhotoPress}
+          onDelete={onDelete}
         />
       </View>
     );

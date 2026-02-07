@@ -1,22 +1,24 @@
-import { StyleSheet, Image, TouchableOpacity } from 'react-native';
+// mobile/app/components/PhotoRow/OnePhotoLayout
+import { StyleSheet, View } from 'react-native';
 import { Photo } from '../../hooks/usePhotoStorage';
-import { PHOTO_RADIUS } from './PhotoRow';
+import { PhotoItem } from './PhotoItem';
 
 interface OnePhotoLayoutProps {
   photo: Photo;
   height: number;
-  onPhotoPress: (photo: Photo) => void;
+  onPhotoPress?: (photo: Photo) => void;
+  onDelete?: (photo: Photo) => void;
 }
 
-export function OnePhotoLayout({ photo, height, onPhotoPress }: OnePhotoLayoutProps) {
+export function OnePhotoLayout({ photo, height, onDelete }: OnePhotoLayoutProps) {
   return (
-    <TouchableOpacity
-      style={[styles.container, { height }]}
-      onPress={() => onPhotoPress(photo)}
-      activeOpacity={0.9}
-    >
-      <Image source={{ uri: photo.uri }} style={[styles.image, { borderRadius: PHOTO_RADIUS }]} />
-    </TouchableOpacity>
+    <View style={[styles.container, { height }]}>
+      <PhotoItem
+        photo={photo}
+        style={styles.photoItem}
+        onDelete={onDelete}
+      />
+    </View>
   );
 }
 
@@ -24,7 +26,7 @@ const styles = StyleSheet.create({
   container: {
     width: '100%',
   },
-  image: {
+  photoItem: {
     flex: 1,
     width: '100%',
   },

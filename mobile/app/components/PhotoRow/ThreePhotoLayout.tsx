@@ -1,5 +1,7 @@
-import { StyleSheet, Image, TouchableOpacity, View } from 'react-native';
+// mobile/app/components/PhotoRow/ThreePhotoLayout
+import { StyleSheet, View } from 'react-native';
 import { Photo } from '../../hooks/usePhotoStorage';
+import { PhotoItem } from './PhotoItem';
 import { PHOTO_RADIUS } from './PhotoRow';
 
 export type ThreePhotoVariant = 'leftLarge' | 'rightLarge' | 'equal' | 'topHeavy' | 'bottomHeavy';
@@ -8,20 +10,24 @@ interface ThreePhotoLayoutProps {
   photos: [Photo, Photo, Photo];
   height: number;
   variant: ThreePhotoVariant;
-  onPhotoPress: (photo: Photo) => void;
+  onDelete?: (photo: Photo) => void;
 }
 
 const GAP = 2;
 
-export function ThreePhotoLayout({ photos, height, variant, onPhotoPress }: ThreePhotoLayoutProps) {
+export function ThreePhotoLayout({
+  photos,
+  height,
+  variant,
+  onDelete
+}: ThreePhotoLayoutProps) {
+
   const renderPhoto = (photo: Photo, style: any) => (
-    <TouchableOpacity
+    <PhotoItem
+      photo={photo}
       style={[styles.photoContainer, style]}
-      onPress={() => onPhotoPress(photo)}
-      activeOpacity={0.9}
-    >
-      <Image source={{ uri: photo.uri }} style={[styles.image, { borderRadius: PHOTO_RADIUS }]} />
-    </TouchableOpacity>
+      onDelete={onDelete}
+    />
   );
 
   // 1 large on left, 2 stacked on right
@@ -122,10 +128,7 @@ const styles = StyleSheet.create({
   },
   photoContainer: {
     overflow: 'hidden',
-  },
-  image: {
-    flex: 1,
-    width: '100%',
+    borderRadius: PHOTO_RADIUS,
   },
   stackedColumn: {
     flex: 0.4,

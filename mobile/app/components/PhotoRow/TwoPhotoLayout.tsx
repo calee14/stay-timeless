@@ -1,5 +1,7 @@
-import { StyleSheet, Image, TouchableOpacity, View } from 'react-native';
+// mobile/app/components/PhotoRow/TwoPhotoLayout
+import { StyleSheet, View } from 'react-native';
 import { Photo } from '../../hooks/usePhotoStorage';
+import { PhotoItem } from './PhotoItem';
 import { PHOTO_RADIUS } from './PhotoRow';
 
 export type TwoPhotoVariant = 'equal' | 'leftHeavy' | 'rightHeavy';
@@ -8,12 +10,17 @@ interface TwoPhotoLayoutProps {
   photos: [Photo, Photo];
   height: number;
   variant: TwoPhotoVariant;
-  onPhotoPress: (photo: Photo) => void;
+  onDelete?: (photo: Photo) => void;
 }
 
 const GAP = 2;
 
-export function TwoPhotoLayout({ photos, height, variant, onPhotoPress }: TwoPhotoLayoutProps) {
+export function TwoPhotoLayout({
+  photos,
+  height,
+  variant,
+  onDelete
+}: TwoPhotoLayoutProps) {
   const getFlexRatios = (): [number, number] => {
     switch (variant) {
       case 'leftHeavy':
@@ -30,23 +37,17 @@ export function TwoPhotoLayout({ photos, height, variant, onPhotoPress }: TwoPho
 
   return (
     <View style={[styles.container, { height }]}>
-      <TouchableOpacity
+      <PhotoItem
+        photo={photos[0]}
         style={[styles.photoContainer, { flex: leftFlex }]}
-        onPress={() => onPhotoPress(photos[0])}
-        activeOpacity={0.9}
-      >
-        <Image source={{ uri: photos[0].uri }} style={[styles.image, { borderRadius: PHOTO_RADIUS }]} />
-      </TouchableOpacity>
-
+        onDelete={onDelete}
+      />
       <View style={{ width: GAP }} />
-
-      <TouchableOpacity
+      <PhotoItem
+        photo={photos[1]}
         style={[styles.photoContainer, { flex: rightFlex }]}
-        onPress={() => onPhotoPress(photos[1])}
-        activeOpacity={0.9}
-      >
-        <Image source={{ uri: photos[1].uri }} style={[styles.image, { borderRadius: PHOTO_RADIUS }]} />
-      </TouchableOpacity>
+        onDelete={onDelete}
+      />
     </View>
   );
 }
@@ -58,9 +59,6 @@ const styles = StyleSheet.create({
   },
   photoContainer: {
     overflow: 'hidden',
-  },
-  image: {
-    flex: 1,
-    width: '100%',
+    borderRadius: PHOTO_RADIUS,
   },
 });

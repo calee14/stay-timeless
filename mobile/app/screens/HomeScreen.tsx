@@ -5,20 +5,16 @@ import {
   Text,
   View,
   FlatList,
-  Image,
   TouchableOpacity,
   RefreshControl,
-  Modal,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { usePhotoStorage, Photo } from '../hooks/usePhotoStorage';
-import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PhotoRow, chunkPhotosIntoRows, PhotoRowData, GRID_PADDING } from '../components/PhotoRow';
 
 export default function HomeScreen() {
   const { photos, isLoading, savePhotos, deletePhoto, refreshPhotos } = usePhotoStorage();
-  const [selectedPhoto, setSelectedPhoto] = useState<Photo | null>(null);
   const [refreshing, setRefreshing] = useState(false);
 
   // Chunk photos into rows with layout variants
@@ -50,19 +46,12 @@ export default function HomeScreen() {
     }
   };
 
-  const handleDeletePhoto = async () => {
-    if (selectedPhoto) {
-      await deletePhoto(selectedPhoto.id);
-      setSelectedPhoto(null);
-    }
+  const handleDeletePhoto = async (photo: Photo) => {
+    await deletePhoto(photo.id);
   };
 
   const handleResetOnboarding = () => {
     AsyncStorage.removeItem('@has_completed_onboarding');
-  };
-
-  const handlePhotoPress = (photo: Photo) => {
-    setSelectedPhoto(photo);
   };
 
   const renderRow = ({ item }: { item: PhotoRowData }) => (
@@ -70,7 +59,7 @@ export default function HomeScreen() {
       photos={item.photos}
       variant={item.variant}
       height={item.height}
-      onPhotoPress={handlePhotoPress}
+      onDelete={handleDeletePhoto}
     />
   );
 
@@ -129,49 +118,6 @@ export default function HomeScreen() {
       >
         <Text style={styles.addButtonIcon}>+</Text>
       </TouchableOpacity>
-
-      {/* Photo Detail Modal */}
-      <Modal
-        visible={selectedPhoto !== null}
-        transparent={true}
-        animationType="fade"
-        onRequestClose={() => setSelectedPhoto(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <SafeAreaView style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={() => setSelectedPhoto(null)}
-              >
-                <Text style={styles.modalButtonText}>✕</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.modalButton}
-                onPress={handleDeletePhoto}
-              >
-                <Text style={styles.modalButtonText}>🗑️</Text>
-              </TouchableOpacity>
-            </View>
-
-            {selectedPhoto && (
-              <Image
-                source={{ uri: selectedPhoto.uri }}
-                style={styles.modalImage}
-                resizeMode="contain"
-              />
-            )}
-
-            {selectedPhoto && (
-              <View style={styles.modalInfo}>
-                <Text style={styles.modalDate}>
-                  {new Date(selectedPhoto.createdAt).toLocaleDateString()}
-                </Text>
-              </View>
-            )}
-          </SafeAreaView>
-        </View>
-      </Modal>
     </View>
   );
 }
@@ -191,7 +137,7 @@ const styles = StyleSheet.create({
     color: '#666',
   },
   list: {
-    flexGrow: 1
+    flexGrow: 1,
   },
   emptyList: {
     flex: 1,
@@ -256,40 +202,5 @@ const styles = StyleSheet.create({
     fontSize: 24,
     color: '#000',
     fontWeight: '300',
-  },
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  modalContent: {
-    flex: 1,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  modalButton: {
-    width: 44,
-    height: 44,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  modalButtonText: {
-    fontSize: 20,
-    color: '#fff',
-  },
-  modalImage: {
-    flex: 1,
-    width: '100%',
-  },
-  modalInfo: {
-    padding: 20,
-    alignItems: 'center',
-  },
-  modalDate: {
-    fontSize: 12,
-    color: 'rgba(255, 255, 255, 0.5)',
   },
 });
