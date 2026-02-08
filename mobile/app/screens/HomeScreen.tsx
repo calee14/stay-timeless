@@ -6,7 +6,6 @@ import {
   View,
   FlatList,
   TouchableOpacity,
-  RefreshControl,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { usePhotoStorage, Photo } from '../hooks/usePhotoStorage';
@@ -15,16 +14,9 @@ import { PhotoRow, chunkPhotosIntoRows, PhotoRowData, GRID_PADDING } from '../co
 
 export default function HomeScreen() {
   const { photos, isLoading, savePhotos, deletePhoto, refreshPhotos } = usePhotoStorage();
-  const [refreshing, setRefreshing] = useState(false);
 
   // Chunk photos into rows with layout variants
   const photoRows = useMemo(() => chunkPhotosIntoRows(photos), [photos]);
-
-  const onRefresh = useCallback(async () => {
-    setRefreshing(true);
-    await refreshPhotos();
-    setRefreshing(false);
-  }, [refreshPhotos]);
 
   const handleAddPhotos = async () => {
     const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -63,6 +55,12 @@ export default function HomeScreen() {
     />
   );
 
+  const renderHeader = () => (
+    <View style={styles.header}>
+      <Text style={styles.headerTitle}>Your Moments</Text>
+    </View>
+  );
+
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
       <View style={styles.emptyIconContainer}>
@@ -84,19 +82,13 @@ export default function HomeScreen() {
           data={photoRows}
           renderItem={renderRow}
           keyExtractor={(item) => item.id}
+          ListHeaderComponent={renderHeader}
           contentContainerStyle={[
             styles.list,
             { padding: GRID_PADDING },
             photoRows.length === 0 && styles.emptyList,
           ]}
           ListEmptyComponent={renderEmptyState}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor="#999"
-            />
-          }
           showsVerticalScrollIndicator={false}
         />
       )}
@@ -141,6 +133,16 @@ const styles = StyleSheet.create({
   },
   emptyList: {
     flex: 1,
+  },
+  header: {
+    paddingTop: 80,
+    paddingBottom: 8,
+    paddingLeft: 10,
+  },
+  headerTitle: {
+    fontFamily: 'Georgia',
+    fontSize: 50,
+    color: '#333',
   },
   emptyState: {
     flex: 1,

@@ -12,7 +12,7 @@ import {
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { Photo } from '../../hooks/usePhotoStorage';
-import { PHOTO_RADIUS } from './PhotoRow';
+import { PHOTO_RADIUS } from './constants';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -270,6 +270,7 @@ const styles = StyleSheet.create({
     flex: 1,
     width: '100%',
     height: '100%',
+    borderRadius: PHOTO_RADIUS,
   },
   modalContainer: {
     flex: 1,

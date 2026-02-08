@@ -4,6 +4,7 @@ import { Photo } from '../../hooks/usePhotoStorage';
 import { OnePhotoLayout } from './OnePhotoLayout';
 import { TwoPhotoLayout, TwoPhotoVariant } from './TwoPhotoLayout';
 import { ThreePhotoLayout, ThreePhotoVariant } from './ThreePhotoLayout';
+import { PHOTO_GAP, PHOTO_RADIUS, GRID_PADDING } from './constants';
 
 export type PhotoRowVariant = TwoPhotoVariant | ThreePhotoVariant | 'full';
 
@@ -16,9 +17,6 @@ interface PhotoRowProps {
 }
 
 const DEFAULT_HEIGHT = 260;
-export const PHOTO_GAP = 2;
-export const PHOTO_RADIUS = 2;
-export const GRID_PADDING = 0;
 
 export function PhotoRow({
   photos,

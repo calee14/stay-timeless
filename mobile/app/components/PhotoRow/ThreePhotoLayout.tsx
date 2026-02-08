@@ -2,7 +2,7 @@
 import { StyleSheet, View } from 'react-native';
 import { Photo } from '../../hooks/usePhotoStorage';
 import { PhotoItem } from './PhotoItem';
-import { PHOTO_RADIUS } from './PhotoRow';
+import { PHOTO_RADIUS } from './constants';
 
 export type ThreePhotoVariant = 'leftLarge' | 'rightLarge' | 'equal' | 'topHeavy' | 'bottomHeavy';
 
