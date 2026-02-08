@@ -1,5 +1,5 @@
 // mobile/app/components/PhotoRow/PhotoItem
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import {
   StyleSheet,
   Image,
@@ -16,6 +16,9 @@ import { PHOTO_RADIUS } from './PhotoRow';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
+// Padding from screen edges when expanded
+const SCREEN_PADDING = 7;
+
 interface PhotoItemProps {
   photo: Photo;
   style?: object;
@@ -26,18 +29,35 @@ interface PhotoItemProps {
 const SPRING_CONFIG = {
   tension: 100,
   friction: 12,
-  useNativeDriver: true,
+  useNativeDriver: false, // We need to animate width/height, so no native driver
 };
 
 export function PhotoItem({ photo, style, onDelete }: PhotoItemProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [imageLayout, setImageLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
+  const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const imageRef = useRef<View>(null);
 
-  // Animation values
+  // Animation value (0 = thumbnail, 1 = expanded)
   const expandAnim = useRef(new Animated.Value(0)).current;
   const overlayOpacity = useRef(new Animated.Value(0)).current;
   const buttonAnim = useRef(new Animated.Value(0)).current;
+
+  // Fetch the image's real dimensions on mount
+  useEffect(() => {
+    if (photo.uri) {
+      Image.getSize(
+        photo.uri,
+        (width, height) => {
+          setNaturalSize({ width, height });
+        },
+        () => {
+          // Fallback if getSize fails
+          setNaturalSize(null);
+        }
+      );
+    }
+  }, [photo.uri]);
 
   const handlePress = () => {
     imageRef.current?.measureInWindow((x, y, width, height) => {
@@ -53,13 +73,13 @@ export function PhotoItem({ photo, style, onDelete }: PhotoItemProps) {
         Animated.timing(overlayOpacity, {
           toValue: 1,
           duration: 250,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
         Animated.timing(buttonAnim, {
           toValue: 1,
           duration: 200,
           delay: 100,
-          useNativeDriver: true,
+          useNativeDriver: false,
         }),
       ]).start();
     });
@@ -74,12 +94,12 @@ export function PhotoItem({ photo, style, onDelete }: PhotoItemProps) {
       Animated.timing(overlayOpacity, {
         toValue: 0,
         duration: 200,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
       Animated.timing(buttonAnim, {
         toValue: 0,
         duration: 150,
-        useNativeDriver: true,
+        useNativeDriver: false,
       }),
     ]).start(() => {
       setIsExpanded(false);
@@ -93,42 +113,55 @@ export function PhotoItem({ photo, style, onDelete }: PhotoItemProps) {
     }, 300);
   };
 
-  // Calculate transforms for expanded image
-  const aspectRatio = imageLayout.width / imageLayout.height || 1;
-  const targetWidth = SCREEN_WIDTH;
-  const targetHeight = Math.min(SCREEN_HEIGHT * 0.7, targetWidth / aspectRatio);
-  const scaleX = imageLayout.width > 0 ? targetWidth / imageLayout.width : 1;
-  const scaleY = imageLayout.height > 0 ? targetHeight / imageLayout.height : 1;
-  const targetScale = Math.min(scaleX, scaleY);
-  const centerX = SCREEN_WIDTH / 2;
-  const centerY = SCREEN_HEIGHT / 2;
-  const currentCenterX = imageLayout.x + imageLayout.width / 2;
-  const currentCenterY = imageLayout.y + imageLayout.height / 2;
-  const targetTranslateX = centerX - currentCenterX;
-  const targetTranslateY = centerY - currentCenterY;
+  // Calculate the target (expanded) size based on the image's real aspect ratio
+  const realAspectRatio = naturalSize
+    ? naturalSize.width / naturalSize.height
+    : imageLayout.width / imageLayout.height || 1;
 
-  // Interpolated styles
-  const imageAnimatedStyle = {
-    transform: [
-      {
-        translateX: expandAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, targetTranslateX],
-        }),
-      },
-      {
-        translateY: expandAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, targetTranslateY],
-        }),
-      },
-      {
-        scale: expandAnim.interpolate({
-          inputRange: [0, 1],
-          outputRange: [1, targetScale],
-        }),
-      },
-    ],
+  const maxWidth = SCREEN_WIDTH - SCREEN_PADDING * 2;
+  const maxHeight = SCREEN_HEIGHT * 0.75;
+
+  let targetWidth: number;
+  let targetHeight: number;
+
+  if (realAspectRatio > maxWidth / maxHeight) {
+    // Image is wider than available space — constrain by width
+    targetWidth = maxWidth;
+    targetHeight = maxWidth / realAspectRatio;
+  } else {
+    // Image is taller — constrain by height
+    targetHeight = maxHeight;
+    targetWidth = maxHeight * realAspectRatio;
+  }
+
+  // Target position: centered on screen
+  const targetX = (SCREEN_WIDTH - targetWidth) / 2;
+  const targetY = (SCREEN_HEIGHT - targetHeight) / 2;
+
+  // Interpolated styles — animate position and size from thumbnail to full
+  const animatedContainerStyle = {
+    position: 'absolute' as const,
+    left: expandAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [imageLayout.x, targetX],
+    }),
+    top: expandAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [imageLayout.y, targetY],
+    }),
+    width: expandAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [imageLayout.width, targetWidth],
+    }),
+    height: expandAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [imageLayout.height, targetHeight],
+    }),
+    borderRadius: expandAnim.interpolate({
+      inputRange: [0, 1],
+      outputRange: [PHOTO_RADIUS, 12],
+    }),
+    overflow: 'hidden' as const,
   };
 
   const buttonAnimatedStyle = {
@@ -185,21 +218,16 @@ export function PhotoItem({ photo, style, onDelete }: PhotoItemProps) {
             </BlurView>
           </Animated.View>
 
-          {/* Animated expanded image */}
+          {/* Animated expanded image — animates position, size, and aspect ratio */}
           <Animated.View
-            style={[
-              styles.expandedImageContainer,
-              {
-                left: imageLayout.x,
-                top: imageLayout.y,
-                width: imageLayout.width,
-                height: imageLayout.height,
-              },
-              imageAnimatedStyle,
-            ]}
+            style={animatedContainerStyle}
             pointerEvents="none"
           >
-            <Image source={{ uri: photo.uri }} style={styles.expandedImage} />
+            <Image
+              source={{ uri: photo.uri }}
+              style={styles.expandedImage}
+              resizeMode="cover"
+            />
           </Animated.View>
 
           {/* Action buttons */}
@@ -255,11 +283,6 @@ const styles = StyleSheet.create({
   blurTouchable: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.2)',
-  },
-  expandedImageContainer: {
-    position: 'absolute',
-    borderRadius: PHOTO_RADIUS,
-    overflow: 'hidden',
   },
   expandedImage: {
     flex: 1,
