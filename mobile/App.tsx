@@ -9,6 +9,7 @@ import HomeScreen from './app/screens/HomeScreen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';
+import { ScrollProvider } from 'app/context/ScrollContext';
 
 const queryClient = new QueryClient();
 
@@ -77,7 +78,9 @@ export default function App() {
     <SafeAreaProvider onLayout={onLayoutRootView}>
       <trpc.Provider client={trpcClient} queryClient={queryClient}>
         <QueryClientProvider client={queryClient}>
-          <MainApp />
+          <ScrollProvider>
+            <MainApp />
+          </ScrollProvider>
         </QueryClientProvider>
       </trpc.Provider>
     </SafeAreaProvider>

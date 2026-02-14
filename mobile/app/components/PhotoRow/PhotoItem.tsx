@@ -13,6 +13,7 @@ import {
 import { BlurView } from 'expo-blur';
 import { Photo } from '../../hooks/usePhotoStorage';
 import { PHOTO_RADIUS } from './constants';
+import { useScrollEnabled } from 'app/context/ScrollContext';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
 
@@ -27,8 +28,8 @@ interface PhotoItemProps {
 
 // Spring config for snappy animations
 const SPRING_CONFIG = {
-  tension: 100,
-  friction: 12,
+  tension: 88,
+  friction: 13,
   useNativeDriver: false, // We need to animate width/height, so no native driver
 };
 
@@ -37,6 +38,7 @@ export function PhotoItem({ photo, style, onDelete }: PhotoItemProps) {
   const [imageLayout, setImageLayout] = useState({ x: 0, y: 0, width: 0, height: 0 });
   const [naturalSize, setNaturalSize] = useState<{ width: number; height: number } | null>(null);
   const imageRef = useRef<View>(null);
+  const { setScrollEnabled } = useScrollEnabled();
 
   // Animation value (0 = thumbnail, 1 = expanded)
   const expandAnim = useRef(new Animated.Value(0)).current;
@@ -61,6 +63,7 @@ export function PhotoItem({ photo, style, onDelete }: PhotoItemProps) {
 
   const handlePress = () => {
     imageRef.current?.measureInWindow((x, y, width, height) => {
+      setScrollEnabled(false);
       setImageLayout({ x, y, width, height });
       setIsExpanded(true);
 
@@ -86,6 +89,7 @@ export function PhotoItem({ photo, style, onDelete }: PhotoItemProps) {
   };
 
   const handleClose = () => {
+    setScrollEnabled(true);
     Animated.parallel([
       Animated.spring(expandAnim, {
         toValue: 0,

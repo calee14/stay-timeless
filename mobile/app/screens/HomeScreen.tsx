@@ -11,9 +11,12 @@ import * as ImagePicker from 'expo-image-picker';
 import { usePhotoStorage, Photo } from '../hooks/usePhotoStorage';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { PhotoRow, chunkPhotosIntoRows, PhotoRowData, GRID_PADDING } from '../components/PhotoRow';
+import { useScrollEnabled } from 'app/context/ScrollContext';
 
 export default function HomeScreen() {
   const { photos, isLoading, savePhotos, deletePhoto, refreshPhotos } = usePhotoStorage();
+
+  const { scrollEnabled } = useScrollEnabled();
 
   // Chunk photos into rows with layout variants
   const photoRows = useMemo(() => chunkPhotosIntoRows(photos), [photos]);
@@ -82,6 +85,7 @@ export default function HomeScreen() {
           data={photoRows}
           renderItem={renderRow}
           keyExtractor={(item) => item.id}
+          scrollEnabled={scrollEnabled}
           ListHeaderComponent={renderHeader}
           contentContainerStyle={[
             styles.list,
