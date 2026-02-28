@@ -16,7 +16,8 @@
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "We need access to your photos so you can import them into the app."
-      }
+      },
+      "bundleIdentifier": "com.calee14.staytimeless"
     },
     "android": {
       "adaptiveIcon": {
@@ -25,9 +26,11 @@
       },
       "edgeToEdgeEnabled": true,
       "permissions": [
-        "READ_EXTERNAL_STORAGE",
-        "READ_MEDIA_IMAGES"
-      ]
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.READ_MEDIA_IMAGES",
+        "android.permission.RECORD_AUDIO"
+      ],
+      "package": "com.calee14.staytimeless"
     },
     "web": {
       "favicon": "./assets/favicon.png"
